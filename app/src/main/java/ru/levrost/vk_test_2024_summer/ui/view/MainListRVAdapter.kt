@@ -28,5 +28,6 @@ class MainListRVAdapter(private var list: List<Product>) : RecyclerView.Adapter<
 
     fun updateList(list: List<Product>){
         this.list = list
+        notifyDataSetChanged()
     }
 }
