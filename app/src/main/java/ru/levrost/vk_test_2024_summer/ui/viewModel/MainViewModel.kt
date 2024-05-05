@@ -1,5 +1,6 @@
 package ru.levrost.vk_test_2024_summer.ui.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,11 +12,11 @@ import ru.levrost.vk_test_2024_summer.data.repositories.ProductsRepo
 
 class MainViewModel: ViewModel() {
     private val repo = ProductsRepo()
-    private var skip = 0
+
     fun getProductList(): StateFlow<QueryResult>{
         val products = MutableStateFlow<QueryResult>(QueryResult.Success(emptyList()))
         viewModelScope.launch {
-            repo.getProductList(skip)
+            repo.getProductList()
                 .catch {
                     products.value = QueryResult.Error(it)
                 }
@@ -26,8 +27,8 @@ class MainViewModel: ViewModel() {
         return products
     }
 
-    fun nextPage() {
-        skip += 20
+    fun nextPage(currentPosition: Int) {
+        repo.nextPage(currentPosition)
     }
 
     sealed class QueryResult {
