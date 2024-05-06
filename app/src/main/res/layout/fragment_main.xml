@@ -8,12 +8,21 @@
     tools:context=".ui.view.MainFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_views"
+        android:id="@+id/categories_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/products_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginHorizontal="4dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/categories_recycler_view" />
 
     <ProgressBar
         android:id="@+id/rv_loading"
@@ -22,7 +31,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recycler_views" />
+        app:layout_constraintTop_toBottomOf="@+id/products_recycler_view" />
 
     <LinearLayout
         android:id="@+id/error_mess"

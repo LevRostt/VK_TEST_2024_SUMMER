@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/categoty_name"
+    android:text="example"
+    android:textColor="@color/black"
+    android:textSize="16sp"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="16dp"
+    android:background="@drawable/category_card_bg"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />

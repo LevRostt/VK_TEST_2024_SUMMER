@@ -28,7 +28,8 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        controller.setupRV()
+        controller.setupRVs()
+        controller.bindButtons()
     }
 
     override fun onDestroyView() {

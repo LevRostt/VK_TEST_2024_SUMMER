@@ -1,21 +1,19 @@
-package ru.levrost.vk_test_2024_summer.ui.view
+package ru.levrost.vk_test_2024_summer.ui.view.adapters
 
 import android.graphics.Paint
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import okhttp3.internal.format
 import ru.levrost.vk_test_2024_summer.data.model.Product
 import ru.levrost.vk_test_2024_summer.databinding.FragmentItemCardBinding
-import ru.levrost.vk_test_2024_summer.ui.viewModel.MainViewModel
+import ru.levrost.vk_test_2024_summer.debugLog
+import ru.levrost.vk_test_2024_summer.ui.view.MainFragmentController.RVListExtender
 
-class MainListRVAdapter(
-    private var productsList: List<Product>,
-    private val viewModel: MainViewModel,
-    private var extendRVList: () -> Unit
-) : RecyclerView.Adapter<MainListRVAdapter.MainListHolder>(){
+class ProductListRVAdapter(
+    private var productsList: List<Product>
+) : RecyclerView.Adapter<ProductListRVAdapter.MainListHolder>(){
+    private var rvListExtender: RVListExtender? = null
     class MainListHolder(val binding: FragmentItemCardBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainListHolder {
@@ -32,19 +30,18 @@ class MainListRVAdapter(
             productTitle.text = productsList[position].title
             productDescription.text = productsList[position].description
             productThumbnail.load(productsList[position].thumbnail)
-            productPrice.text = productsList[position].price.toString() + "$"
+            productPrice.text = "%.2f".format(productsList[position].price - productsList[position].price*(productsList[position].discountPercentage)/100) + "$"
 
             productWithoutDiscount.apply {
-                text = "%.2f".format(productsList[position].price / (1 - productsList[position].discountPercentage / 100)) + "$"
+                text = productsList[position].price.toString() + "$"
                 paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
             }
 
             productDiscount.text = "-${productsList[position].discountPercentage}%"
         }
 
-        if ((position + 1)%20 == 0 && position==productsList.lastIndex) { //check position
-            viewModel.nextPage(position + 1)
-            extendRVList()
+        if (position==productsList.lastIndex) { //check position
+            rvListExtender?.extendRvList(position+1)
         }
     }
 
@@ -54,11 +51,13 @@ class MainListRVAdapter(
         notifyItemRangeInserted(productsList.size, list.size)
     }
     fun extendList(list: List<Product>){
+//        debugLog("$list")
         productsList += list
         notifyItemRangeInserted(productsList.size, list.size)
     }
 
-    fun changeExtendRVList(func: () -> Unit){
-        extendRVList = func
+    fun changeRvListExtender(extender: RVListExtender){
+        rvListExtender = extender
+        extender.extendRvList(0)
     }
 }

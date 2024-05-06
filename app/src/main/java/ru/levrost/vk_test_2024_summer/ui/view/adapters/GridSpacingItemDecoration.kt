@@ -1,4 +1,4 @@
-package ru.levrost.vk_test_2024_summer.ui.view
+package ru.levrost.vk_test_2024_summer.ui.view.adapters
 
 import android.graphics.Rect
 import android.view.View
