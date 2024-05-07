@@ -7,5 +7,13 @@
 
     <style name="Theme.VK_TEST_2024_SUMMER" parent="Base.Theme.VK_TEST_2024_SUMMER">
         <item name="android:textAllCaps">false</item>
+        <item name="android:statusBarColor">@color/light_grey</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="colorPrimary">@color/bg_color</item>
     </style>
+
+    <style name="SearchViewStyle" parent="Widget.AppCompat.SearchView">
+        <item name="queryBackground">@null</item>
+    </style>
+    
 </resources>

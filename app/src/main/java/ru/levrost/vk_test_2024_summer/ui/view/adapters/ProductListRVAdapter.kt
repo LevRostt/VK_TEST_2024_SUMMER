@@ -51,12 +51,16 @@ class ProductListRVAdapter(
         notifyItemRangeInserted(productsList.size, list.size)
     }
     fun extendList(list: List<Product>){
-//        debugLog("$list")
-        productsList += list
-        notifyItemRangeInserted(productsList.size, list.size)
+        if(productsList.containsAll(list))
+            updateList(list)
+        else {
+            productsList += list
+            notifyItemRangeInserted(productsList.size, list.size)
+        }
     }
 
     fun changeRvListExtender(extender: RVListExtender){
+        updateList(emptyList())
         rvListExtender = extender
         extender.extendRvList(0)
     }

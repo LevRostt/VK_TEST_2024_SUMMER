@@ -1,6 +1,8 @@
 package ru.levrost.vk_test_2024_summer.ui.view
 
+import android.animation.TimeInterpolator
 import android.view.View
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -13,6 +15,7 @@ import kotlinx.coroutines.launch
 import ru.levrost.vk_test_2024_summer.R
 import ru.levrost.vk_test_2024_summer.data.model.Product
 import ru.levrost.vk_test_2024_summer.databinding.FragmentMainBinding
+import ru.levrost.vk_test_2024_summer.debugLog
 import ru.levrost.vk_test_2024_summer.ui.view.adapters.CategoryListRVAdapter
 import ru.levrost.vk_test_2024_summer.ui.view.adapters.GridSpacingItemDecoration
 import ru.levrost.vk_test_2024_summer.ui.view.adapters.LinearSpacingItemDecoration
@@ -29,18 +32,21 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
             layoutManager = GridLayoutManager(fragment.context, 2)
             adapter = productListRVAdapter
             addItemDecoration(GridSpacingItemDecoration(spacing))
-            productListRVAdapter.changeRvListExtender(baseExtendRVList)
+            if (viewModel.currentFilter != "")
+                productListRVAdapter.changeRvListExtender(filterExtendRVList)
+            else
+                productListRVAdapter.changeRvListExtender(baseExtendRVList)
         }
 
         binding.categoriesRecyclerView.apply {
             val listiner = object : CategoryListRVAdapter.OnItemClickListener{
                 override fun onItemClick(filter: String) {
-                    if (viewModel.lastFilter == filter) {
+                    if (viewModel.currentFilter == filter) {
                         setupBaseRV()
-                        viewModel.lastFilter = ""
+                        viewModel.currentFilter = ""
                     }
                     else {
-                        viewModel.lastFilter = filter
+                        viewModel.currentFilter = filter
                         setupFilterRV()
                     }
                 }
@@ -56,11 +62,50 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
             addItemDecoration(LinearSpacingItemDecoration(spacing))
         }
 
-
-
     }
 
-    fun bindButtons(){
+    fun startSetupButton(){
+        binding.retryRequestBtn.setOnClickListener {
+            viewModel.getLatestCategory()
+            baseExtendRVList.extendRvList(0)
+            binding.retryRequestBtn.isClickable = false
+        }
+    }
+
+    fun setupSearchView(){
+        if (viewModel.currentQuery != ""){
+            binding.searchView.setQuery(viewModel.currentQuery, false)
+        }
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                queryTextInput(query)
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return if (newText == "") {
+                    queryTextInput(newText)
+                    true
+                } else
+                    false
+            }
+
+        })
+    }
+
+    private fun queryTextInput(text: String?){
+        viewModel.currentQuery = text ?: ""
+        if (text == ""){
+            setupBaseRV()
+        }
+        else {
+            setupSearchRV()
+        }
+    }
+
+    private fun setupBaseRV(){
+        productListRVAdapter.changeRvListExtender(baseExtendRVList)
+
         binding.retryRequestBtn.setOnClickListener {
             viewModel.getLatestCategory()
             baseExtendRVList.extendRvList(0)
@@ -69,13 +114,21 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private fun setupFilterRV(){
-        productListRVAdapter.updateList(emptyList())
         productListRVAdapter.changeRvListExtender(filterExtendRVList)
+
+        binding.retryRequestBtn.setOnClickListener {
+            filterExtendRVList.extendRvList(0)
+            binding.retryRequestBtn.isClickable = false
+        }
     }
 
-    private fun setupBaseRV(){
-        productListRVAdapter.updateList(emptyList())
-        productListRVAdapter.changeRvListExtender(baseExtendRVList)
+    private fun setupSearchRV(){
+        productListRVAdapter.changeRvListExtender(searchExtendRVList)
+
+        binding.retryRequestBtn.setOnClickListener {
+            searchExtendRVList.extendRvList(0)
+            binding.retryRequestBtn.isClickable = false
+        }
     }
 
     interface RVListExtender{
@@ -83,13 +136,19 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private val baseExtendRVList = createRVListExtender { skip ->
-        viewModel.getProductList(skip).collectLatest {
+        viewModel.getProducts(skip).collectLatest {
             handleQueryResult(it)
         }
     }
 
     private val filterExtendRVList = createRVListExtender { skip ->
-        viewModel.getFilterProductList(skip).collectLatest {
+        viewModel.getFilterProducts(skip).collectLatest {
+            handleQueryResult(it)
+        }
+    }
+
+    private val searchExtendRVList = createRVListExtender { skip ->
+        viewModel.getSearchedProducts(viewModel.currentQuery, skip).collectLatest {
             handleQueryResult(it)
         }
     }

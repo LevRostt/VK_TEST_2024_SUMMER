@@ -13,7 +13,8 @@ import ru.levrost.vk_test_2024_summer.data.repositories.ProductsRepo
 class MainViewModel: ViewModel() {
     private val repo = ProductsRepo()
     private val _category = MutableStateFlow<List<String>>(emptyList())
-    var lastFilter : String = ""
+    var currentFilter : String = ""
+    var currentQuery : String = ""
     val category : StateFlow<List<String>> get() = _category
 
     init {
@@ -34,14 +35,15 @@ class MainViewModel: ViewModel() {
         }
     }
 
-    fun getProductList(skip: Int): StateFlow<QueryResult>{
+
+    fun getProducts(skip: Int): StateFlow<QueryResult>{
         val products = MutableStateFlow<QueryResult>(QueryResult.Success(emptyList()))
 
         if (callableStateFlowAgain)
             getLatestCategory()
 
         viewModelScope.launch {
-            repo.getProductList(skip)
+            repo.getProducts(skip)
                 .catch {
                     products.value = QueryResult.Error(it)
                 }
@@ -52,14 +54,14 @@ class MainViewModel: ViewModel() {
         return products
     }
 
-    fun getFilterProductList(skip: Int): StateFlow<QueryResult>{
+    fun getFilterProducts(skip: Int): StateFlow<QueryResult>{
         val products = MutableStateFlow<QueryResult>(QueryResult.Success(emptyList()))
 
         viewModelScope.launch {
-            if (lastFilter == "")
-                getProductList(skip)
+            if (currentFilter == "")
+                getProducts(skip)
             else
-                repo.getFilterProductList(lastFilter, skip)
+                repo.getFilterProducts(currentFilter, skip)
                     .catch {
                         products.value = QueryResult.Error(it)
                     }
@@ -70,6 +72,23 @@ class MainViewModel: ViewModel() {
         return products
     }
 
+    fun getSearchedProducts(query: String, skip: Int) : StateFlow<QueryResult>{
+        val products = MutableStateFlow<QueryResult>(QueryResult.Success(emptyList()))
+
+        viewModelScope.launch {
+            if (query == "")
+                getProducts(skip)
+            else
+                repo.getSearchProducts(query, skip)
+                    .catch {
+                        products.value = QueryResult.Error(it)
+                    }
+                    .collectLatest {
+                        products.value = QueryResult.Success(it)
+                    }
+        }
+        return products
+    }
 
     sealed class QueryResult {
         data class Success(val products: List<Product>): QueryResult()

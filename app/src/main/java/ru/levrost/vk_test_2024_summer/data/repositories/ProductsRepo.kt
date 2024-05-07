@@ -8,38 +8,35 @@ import kotlinx.coroutines.flow.flowOn
 import retrofit2.Response
 import ru.levrost.vk_test_2024_summer.data.dataSources.retrofit.ApiClient
 import ru.levrost.vk_test_2024_summer.data.dataSources.retrofit.ServerApi
+import ru.levrost.vk_test_2024_summer.data.dataSources.retrofit.model.ServerProductsRequest
 import ru.levrost.vk_test_2024_summer.data.model.Product
-import ru.levrost.vk_test_2024_summer.debugLog
 
 class ProductsRepo(val dispatcher: CoroutineDispatcher = Dispatchers.IO) {
     private val serverApi: ServerApi = ApiClient.retrofit.create(ServerApi::class.java)
     private var maxSkip = 0
+    private var lastSuccess : Long = 0
 
-    suspend fun getProductList(skip: Int): Flow<List<Product>> = flow {
-        val response = serverApi.getProducts(skip, 20)
+    suspend fun getProducts(skip: Int): Flow<List<Product>> =
+        fetchProducts { serverApi.getProducts(skip, 20) }
+
+    suspend fun getFilterProducts(filter: String, skip: Int): Flow<List<Product>> =
+        fetchProducts { serverApi.getProductsByCategory(filter, skip, 20) }
+
+    suspend fun getSearchProducts(query: String, skip: Int): Flow<List<Product>> =
+        fetchProducts { serverApi.getProductsBySearch(query, skip, 20) }
+
+    private suspend fun fetchProducts(
+        request: suspend () -> Response<ServerProductsRequest>,
+    ): Flow<List<Product>> = flow {
+        val response = request()
 
         if (checkResponseCode(response)){
             oldListChecker(response.body()!!.total)
             emit(response.body()?.products ?: emptyList())
-        }
-        else
+        } else {
             emit(emptyList())
-
-    }
-        .flowOn(dispatcher)
-
-    suspend fun getFilterProductList(filter: String, skip: Int): Flow<List<Product>> = flow {
-        val response = serverApi.getProductsByCategory(filter, skip, 20)
-
-        if (checkResponseCode(response)){
-            oldListChecker(response.body()!!.total)
-            emit(response.body()?.products ?: emptyList())
         }
-        else
-            emit(emptyList())
-
-    }
-        .flowOn(dispatcher)
+    }.flowOn(dispatcher)
 
     private fun oldListChecker(total: Int){
         if (maxSkip != total){

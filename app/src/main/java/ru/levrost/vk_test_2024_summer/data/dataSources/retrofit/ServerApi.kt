@@ -22,4 +22,11 @@ interface ServerApi {
         @Query("skip") skip: Int,
         @Query("limit") limit: Int
     ) : Response<ServerProductsRequest>
+
+    @GET("products/search")
+    suspend fun getProductsBySearch(
+        @Query("q") query: String,
+        @Query("skip") skip: Int,
+        @Query("limit") limit: Int
+    ) : Response<ServerProductsRequest>
 }

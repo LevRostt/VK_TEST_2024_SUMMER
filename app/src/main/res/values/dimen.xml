@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="rv_space">16dp</dimen>
+    <dimen name="text_category_sp">16sp</dimen>
+    <dimen name="text_category_dp">32dp</dimen> // 16 + 8 + 8
+    <dimen name="text_category_padding">8dp</dimen>
+
 </resources>

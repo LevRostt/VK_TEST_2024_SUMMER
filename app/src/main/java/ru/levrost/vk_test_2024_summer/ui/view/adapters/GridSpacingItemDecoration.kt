@@ -15,9 +15,9 @@ class GridSpacingItemDecoration(private val spacing: Int) : RecyclerView.ItemDec
         val position = parent.getChildAdapterPosition(view)
         val spanCount = (parent.layoutManager as? GridLayoutManager)?.spanCount ?: 1
 
-        if (position < spanCount) {
-            outRect.top = spacing
-        }
+//        if (position < spanCount && (position != 0 || position != 1)) {
+//            outRect.top = spacing
+//        }
         outRect.bottom = spacing
     }
 }
