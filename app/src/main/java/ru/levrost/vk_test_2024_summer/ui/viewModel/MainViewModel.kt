@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.levrost.vk_test_2024_summer.data.model.Product
 import ru.levrost.vk_test_2024_summer.data.repositories.ProductsRepo
+import ru.levrost.vk_test_2024_summer.debugLog
 
 class MainViewModel: ViewModel() {
     private val repo = ProductsRepo()
@@ -72,14 +73,14 @@ class MainViewModel: ViewModel() {
         return products
     }
 
-    fun getSearchedProducts(query: String, skip: Int) : StateFlow<QueryResult>{
+    fun getSearchedProducts(skip: Int) : StateFlow<QueryResult>{
         val products = MutableStateFlow<QueryResult>(QueryResult.Success(emptyList()))
 
         viewModelScope.launch {
-            if (query == "")
+            if (currentQuery == "")
                 getProducts(skip)
             else
-                repo.getSearchProducts(query, skip)
+                repo.getSearchProducts(currentQuery, skip)
                     .catch {
                         products.value = QueryResult.Error(it)
                     }

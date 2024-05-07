@@ -1,7 +1,8 @@
 package ru.levrost.vk_test_2024_summer.ui.view
 
-import android.animation.TimeInterpolator
 import android.view.View
+import android.view.animation.AnimationUtils
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import ru.levrost.vk_test_2024_summer.R
 import ru.levrost.vk_test_2024_summer.data.model.Product
@@ -22,9 +24,11 @@ import ru.levrost.vk_test_2024_summer.ui.view.adapters.LinearSpacingItemDecorati
 import ru.levrost.vk_test_2024_summer.ui.view.adapters.ProductListRVAdapter
 import ru.levrost.vk_test_2024_summer.ui.viewModel.MainViewModel
 import ru.levrost.vk_test_2024_summer.ui.viewModel.MainViewModel.QueryResult
+import java.util.Date
 
 class MainFragmentController(private val fragment: MainFragment, private val binding: FragmentMainBinding, private val viewModel: MainViewModel) {
     private val productListRVAdapter = ProductListRVAdapter(emptyList())
+    private var categoryRVAdapter: CategoryListRVAdapter? = null
     private var isError = false
     fun setupRVs(){
         val spacing = fragment.resources.getDimensionPixelSize(R.dimen.rv_space)
@@ -33,9 +37,9 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
             adapter = productListRVAdapter
             addItemDecoration(GridSpacingItemDecoration(spacing))
             if (viewModel.currentFilter != "")
-                productListRVAdapter.changeRvListExtender(filterExtendRVList)
+                setupFilterRV()
             else
-                productListRVAdapter.changeRvListExtender(baseExtendRVList)
+                setupBaseRV()
         }
 
         binding.categoriesRecyclerView.apply {
@@ -53,9 +57,11 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
             }
             layoutManager = LinearLayoutManager(fragment.context, LinearLayoutManager.HORIZONTAL, false)
             fragment.lifecycleScope.launch(Dispatchers.Main) {
-                fragment.repeatOnLifecycle(Lifecycle.State.STARTED){
+                fragment.viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED){
                     viewModel.category.collectLatest {
-                        adapter = CategoryListRVAdapter(context, it, listiner)
+                        categoryRVAdapter = CategoryListRVAdapter(context, it, listiner)
+                        categoryRVAdapter!!.activeFilterName = viewModel.currentFilter
+                        adapter = categoryRVAdapter
                     }
                 }
             }
@@ -64,7 +70,7 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
 
     }
 
-    fun startSetupButton(){
+    fun setupStartupButton(){
         binding.retryRequestBtn.setOnClickListener {
             viewModel.getLatestCategory()
             baseExtendRVList.extendRvList(0)
@@ -78,29 +84,31 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
         }
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
-                queryTextInput(query)
+                viewModel.currentQuery = query ?: ""
+                setupSearchRV()
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 return if (newText == "") {
-                    queryTextInput(newText)
+                    viewModel.currentQuery = newText
+                    setupNoQueryRV()
                     true
-                } else
+                } else {
+                    categoryRVAdapter?.deActivatePosition()
+                    viewModel.currentFilter = ""
                     false
+                }
             }
 
         })
     }
 
-    private fun queryTextInput(text: String?){
-        viewModel.currentQuery = text ?: ""
-        if (text == ""){
+    private fun setupNoQueryRV(){
+        if (viewModel.currentFilter == "")
             setupBaseRV()
-        }
-        else {
-            setupSearchRV()
-        }
+        else
+            setupFilterRV()
     }
 
     private fun setupBaseRV(){
@@ -148,7 +156,7 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private val searchExtendRVList = createRVListExtender { skip ->
-        viewModel.getSearchedProducts(viewModel.currentQuery, skip).collectLatest {
+        viewModel.getSearchedProducts(skip).collectLatest {
             handleQueryResult(it)
         }
     }
@@ -169,7 +177,7 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
                 )
                 isError = false
                 fragment.lifecycleScope.launch(Dispatchers.Main) {
-                    fragment.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    fragment.viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                         binding.rvLoading.visibility = View.GONE
                         block(skip)
                     }
@@ -201,7 +209,21 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
         }
         else{
             isError = true
-//            Toast.makeText(fragment.context, fragment.resources.getText(R.string.server_wrong_mess_additional).toString(), Toast.LENGTH_SHORT).show()
+        }
+        showErrToast()
+    }
+
+    private var lastShow: Long = 0
+    private fun showErrToast(){
+        if (Date().time - lastShow > 2000) {
+            lastShow = Date().time
+            Toast.makeText(
+                fragment.context,
+                fragment.resources.getText(R.string.server_wrong_mess_additional).toString(),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
+
+
 }
