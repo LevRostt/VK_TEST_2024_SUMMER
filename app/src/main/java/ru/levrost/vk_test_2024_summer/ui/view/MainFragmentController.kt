@@ -27,14 +27,20 @@ import ru.levrost.vk_test_2024_summer.ui.viewModel.MainViewModel.QueryResult
 import java.util.Date
 
 class MainFragmentController(private val fragment: MainFragment, private val binding: FragmentMainBinding, private val viewModel: MainViewModel) {
-    private val productListRVAdapter = ProductListRVAdapter(emptyList())
+    private var productListRVAdapter: ProductListRVAdapter? = null
     private var categoryRVAdapter: CategoryListRVAdapter? = null
     private var isError = false
     fun setupRVs(){
         val spacing = fragment.resources.getDimensionPixelSize(R.dimen.rv_space)
         binding.productsRecyclerView.apply {
-            layoutManager = GridLayoutManager(fragment.context, 2)
+            val listiner = object : ProductListRVAdapter.OnItemClickListener{
+                override fun onItemClick(product: Product) {
+                    showProductFragment(product)
+                }
+            }
+            productListRVAdapter = ProductListRVAdapter(listiner)
             adapter = productListRVAdapter
+            layoutManager = GridLayoutManager(fragment.context, 2)
             addItemDecoration(GridSpacingItemDecoration(spacing))
             if (viewModel.currentFilter != "")
                 setupFilterRV()
@@ -104,6 +110,13 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
         })
     }
 
+    private fun showProductFragment(product: Product){
+        fragment.parentFragmentManager.beginTransaction()
+            .add(R.id.top_container, ProductFragment(product))
+            .addToBackStack("product")
+            .commit()
+    }
+
     private fun setupNoQueryRV(){
         if (viewModel.currentFilter == "")
             setupBaseRV()
@@ -112,7 +125,7 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private fun setupBaseRV(){
-        productListRVAdapter.changeRvListExtender(baseExtendRVList)
+        productListRVAdapter!!.changeRvListExtender(baseExtendRVList)
 
         binding.retryRequestBtn.setOnClickListener {
             viewModel.getLatestCategory()
@@ -122,7 +135,7 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private fun setupFilterRV(){
-        productListRVAdapter.changeRvListExtender(filterExtendRVList)
+        productListRVAdapter!!.changeRvListExtender(filterExtendRVList)
 
         binding.retryRequestBtn.setOnClickListener {
             filterExtendRVList.extendRvList(0)
@@ -131,16 +144,12 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
     }
 
     private fun setupSearchRV(){
-        productListRVAdapter.changeRvListExtender(searchExtendRVList)
+        productListRVAdapter!!.changeRvListExtender(searchExtendRVList)
 
         binding.retryRequestBtn.setOnClickListener {
             searchExtendRVList.extendRvList(0)
             binding.retryRequestBtn.isClickable = false
         }
-    }
-
-    interface RVListExtender{
-        fun extendRvList(skip: Int)
     }
 
     private val baseExtendRVList = createRVListExtender { skip ->
@@ -161,8 +170,8 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
         }
     }
 
-    private fun createRVListExtender(block: suspend (Int) -> Unit): RVListExtender {
-        return object : RVListExtender {
+    private fun createRVListExtender(block: suspend (Int) -> Unit): ProductListRVAdapter.RVListExtender {
+        return object : ProductListRVAdapter.RVListExtender {
             override fun extendRvList(skip: Int) {
                 binding.productsRecyclerView.clearOnScrollListeners()
                 binding.productsRecyclerView.addOnScrollListener(
@@ -198,13 +207,13 @@ class MainFragmentController(private val fragment: MainFragment, private val bin
         isError = false
         if(productsList.isNotEmpty()){
             binding.errorMess.visibility = View.GONE
-            productListRVAdapter.extendList(productsList)
+            productListRVAdapter!!.extendList(productsList)
         }
     }
 
     private fun showError(e: Throwable){
         binding.retryRequestBtn.isClickable = true
-        if (productListRVAdapter.itemCount == 0){
+        if (productListRVAdapter!!.itemCount == 0){
             binding.errorMess.visibility = View.VISIBLE
         }
         else{

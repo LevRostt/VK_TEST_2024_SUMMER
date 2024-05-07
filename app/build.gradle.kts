@@ -50,11 +50,10 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     implementation("androidx.fragment:fragment-ktx:1.7.0")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
 
     implementation("io.coil-kt:coil:2.6.0")
 }

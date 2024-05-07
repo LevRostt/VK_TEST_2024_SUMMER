@@ -5,4 +5,7 @@
     <dimen name="text_category_dp">32dp</dimen> // 16 + 8 + 8
     <dimen name="text_category_padding">8dp</dimen>
 
+    <dimen name="margin_text_in_product_fragment">24dp</dimen>
+    <dimen name="margin_price_in_product_fragment">32dp</dimen>
+
 </resources>

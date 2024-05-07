@@ -42,7 +42,6 @@ class MainFragment : Fragment() {
         controller.setupRVs()
         controller.setupSearchView()
         controller.setupStartupButton()
-
     }
 
     override fun onDestroyView() {

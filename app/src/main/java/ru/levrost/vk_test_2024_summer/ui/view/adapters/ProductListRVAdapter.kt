@@ -10,12 +10,12 @@ import ru.levrost.vk_test_2024_summer.R
 import ru.levrost.vk_test_2024_summer.data.model.Product
 import ru.levrost.vk_test_2024_summer.databinding.FragmentItemCardBinding
 import ru.levrost.vk_test_2024_summer.debugLog
-import ru.levrost.vk_test_2024_summer.ui.view.MainFragmentController.RVListExtender
 
 class ProductListRVAdapter(
-    private var productsList: List<Product>
+    private val listiner: OnItemClickListener
 ) : RecyclerView.Adapter<ProductListRVAdapter.MainListHolder>(){
     private var rvListExtender: RVListExtender? = null
+    private var productsList: List<Product> = emptyList()
     class MainListHolder(val binding: FragmentItemCardBinding) : RecyclerView.ViewHolder(binding.root)
     {
         fun onBind(product: Product){
@@ -46,7 +46,9 @@ class ProductListRVAdapter(
 
     override fun onBindViewHolder(holder: MainListHolder, position: Int) {
         holder.onBind(productsList[position])
-
+        holder.binding.allCard.setOnClickListener {
+            listiner.onItemClick(productsList[position])
+        }
         if (position==productsList.lastIndex) { //check position
             rvListExtender?.extendRvList(position+1)
         }
@@ -70,5 +72,13 @@ class ProductListRVAdapter(
         updateList(emptyList())
         rvListExtender = extender
         extender.extendRvList(0)
+    }
+
+    interface OnItemClickListener {
+        fun onItemClick(product: Product)
+    }
+
+    interface RVListExtender{
+        fun extendRvList(skip: Int)
     }
 }
